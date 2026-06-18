@@ -723,7 +723,266 @@ document.addEventListener('DOMContentLoaded', () => {
   // Section 5 — Link module
   // ================================================================
 
-  const linkModule = {};
+  // Closure variable — shared by all linkModule methods
+  let links = [];
+
+  const linkModule = {
+    /**
+     * Load links from localStorage using the Section 1 helper.
+     * Assigns the result to the closure `links` variable and returns it.
+     *
+     * @returns {Array} The loaded links array (may be empty).
+     * Requirements: 9.2, 9.3, 9.5
+     */
+    loadLinks() {
+      links = loadItems('links');
+      return links;
+    },
+
+    /**
+     * Persist the current in-memory `links` array to localStorage.
+     * Wraps saveItems in a try/catch to handle QuotaExceededError gracefully.
+     * On quota error: shows an inline storage error message near #links-list.
+     * On success: hides any previously shown storage error message.
+     *
+     * Requirements: 9.1, 9.4
+     */
+    persistLinks() {
+      try {
+        saveItems('links', links);
+
+        // On success: hide/clear the storage error message if visible
+        const storageErrEl = document.getElementById('links-storage-error-msg');
+        if (storageErrEl) {
+          storageErrEl.textContent = '';
+          storageErrEl.setAttribute('hidden', '');
+        }
+      } catch (e) {
+        // Handle QuotaExceededError (and any subclass/variant)
+        if (
+          e instanceof DOMException &&
+          (e.name === 'QuotaExceededError' ||
+            e.name === 'NS_ERROR_DOM_QUOTA_REACHED')
+        ) {
+          // Inject the storage error element dynamically if not present
+          let storageErrEl = document.getElementById('links-storage-error-msg');
+          if (!storageErrEl) {
+            storageErrEl = document.createElement('p');
+            storageErrEl.id = 'links-storage-error-msg';
+            storageErrEl.className = 'error-msg';
+            const listEl = document.getElementById('links-list');
+            if (listEl && listEl.parentNode) {
+              listEl.parentNode.insertBefore(storageErrEl, listEl);
+            }
+          }
+          storageErrEl.textContent = 'Could not save links. Storage may be full.';
+          storageErrEl.removeAttribute('hidden');
+        }
+      }
+    },
+
+    /**
+     * Re-build #links-list entirely from the in-memory `links` array.
+     *
+     * - Clears #links-list (innerHTML = '').
+     * - Appends one <li class="link-item"> per link using the canonical template.
+     * - Shows/hides #links-list and #links-empty-msg based on links.length.
+     *
+     * Requirements: 8.2, 8.3, 8.6
+     */
+    renderList() {
+      const list     = document.getElementById('links-list');
+      const emptyMsg = document.getElementById('links-empty-msg');
+
+      if (!list) return;
+
+      // Clear existing items
+      list.innerHTML = '';
+
+      // Build one <li> per link
+      links.forEach(link => {
+        const li = document.createElement('li');
+        li.className = 'link-item';
+        li.dataset.id = link.id;
+
+        // Anchor element
+        const anchor = document.createElement('a');
+        anchor.className = 'link-anchor';
+        anchor.href = link.url;
+        anchor.target = '_blank';
+        anchor.rel = 'noopener noreferrer';
+        anchor.textContent = link.label;
+
+        // Action buttons container
+        const actions = document.createElement('div');
+        actions.className = 'link-actions';
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'btn btn-icon btn-danger';
+        deleteBtn.dataset.action = 'delete';
+        deleteBtn.textContent = '🗑️';
+
+        actions.appendChild(deleteBtn);
+
+        li.appendChild(anchor);
+        li.appendChild(actions);
+
+        list.appendChild(li);
+      });
+
+      // Toggle list visibility vs. empty-state message
+      if (links.length === 0) {
+        list.setAttribute('hidden', '');
+        if (emptyMsg) emptyMsg.removeAttribute('hidden');
+      } else {
+        list.removeAttribute('hidden');
+        if (emptyMsg) emptyMsg.setAttribute('hidden', '');
+      }
+    },
+
+    /**
+     * Validate the URL string using the browser's built-in <input type="url"> constraint.
+     *
+     * @param {string} urlString - The URL to validate.
+     * @returns {boolean} true if valid, false otherwise.
+     */
+    _isValidUrl(urlString) {
+      const testInput = document.createElement('input');
+      testInput.type = 'url';
+      testInput.value = urlString;
+      return testInput.checkValidity();
+    },
+
+    /**
+     * Add a new link to the list after trimming and validating the inputs.
+     *
+     * Validation order:
+     *  1. If label or url are empty after trim → show "Please enter both a label and a URL."
+     *     in #link-error-msg, return early.
+     *  2. If URL fails <input type="url"> validity → show
+     *     "Please enter a valid URL (e.g. https://example.com)." in #link-error-msg, return early.
+     *  3. Both valid → hide #link-error-msg, create link object, push, persist, render, clear inputs.
+     *
+     * Requirements: 8.1, 8.5, 8.7
+     *
+     * @param {string} label - The raw label value from #input-link-label.
+     * @param {string} url   - The raw URL value from #input-link-url.
+     */
+    addLink(label, url) {
+      const trimmedLabel = (label || '').trim();
+      const trimmedUrl   = (url   || '').trim();
+
+      const errorEl    = document.getElementById('link-error-msg');
+      const labelInput = document.getElementById('input-link-label');
+      const urlInput   = document.getElementById('input-link-url');
+
+      // Validation step 1: check for empty fields
+      if (!trimmedLabel || !trimmedUrl) {
+        if (errorEl) {
+          errorEl.textContent = 'Please enter both a label and a URL.';
+          errorEl.removeAttribute('hidden');
+        }
+        return;
+      }
+
+      // Validation step 2: URL format check
+      if (!this._isValidUrl(trimmedUrl)) {
+        if (errorEl) {
+          errorEl.textContent = 'Please enter a valid URL (e.g. https://example.com).';
+          errorEl.removeAttribute('hidden');
+        }
+        return;
+      }
+
+      // Both valid — hide error
+      if (errorEl) {
+        errorEl.textContent = '';
+        errorEl.setAttribute('hidden', '');
+      }
+
+      // Create and append the new link
+      const newLink = {
+        id:    Date.now(),
+        label: trimmedLabel.slice(0, 100),
+        url:   trimmedUrl,
+      };
+      links.push(newLink);
+
+      this.persistLinks();
+      this.renderList();
+
+      // Clear inputs
+      if (labelInput) labelInput.value = '';
+      if (urlInput)   urlInput.value   = '';
+    },
+
+    /**
+     * Remove the link with the given id from the list, then persist and re-render.
+     *
+     * @param {string|number} id - The link's data-id value (will be cast to Number).
+     * Requirements: 8.4
+     */
+    deleteLink(id) {
+      links = links.filter(l => l.id !== Number(id));
+      this.persistLinks();
+      this.renderList();
+    },
+
+    /**
+     * Initialize the Link module:
+     * 1. Inject #link-error-msg element dynamically after #form-add-link (guarded).
+     * 2. Load persisted links and render the initial list.
+     * 3. Bind #form-add-link submit event to addLink().
+     * 4. Bind delegated click listener on #links-list for delete action.
+     *
+     * Requirements: 8.1, 8.2, 8.4, 9.2
+     */
+    init() {
+      // --- Inject #link-error-msg after #form-add-link ---
+      const form       = document.getElementById('form-add-link');
+      const linksList  = document.getElementById('links-list');
+      const labelInput = document.getElementById('input-link-label');
+      const urlInput   = document.getElementById('input-link-url');
+
+      if (form && !document.getElementById('link-error-msg')) {
+        const errorEl = document.createElement('p');
+        errorEl.className = 'error-msg';
+        errorEl.id = 'link-error-msg';
+        errorEl.setAttribute('hidden', '');
+        // Insert after #form-add-link, before #links-list
+        if (linksList && linksList.parentNode) {
+          linksList.parentNode.insertBefore(errorEl, linksList);
+        } else if (form.parentNode) {
+          form.insertAdjacentElement('afterend', errorEl);
+        }
+      }
+
+      // --- Load persisted links and render ---
+      links = this.loadLinks();
+      this.renderList();
+
+      // --- Bind add-link form submit ---
+      if (form) {
+        form.addEventListener('submit', (e) => {
+          e.preventDefault();
+          this.addLink(
+            labelInput ? labelInput.value : '',
+            urlInput   ? urlInput.value   : ''
+          );
+        });
+      }
+
+      // --- Delegated click handler on #links-list for delete ---
+      if (linksList) {
+        linksList.addEventListener('click', (e) => {
+          if (e.target.closest('[data-action="delete"]')) {
+            const id = e.target.closest('li').dataset.id;
+            this.deleteLink(id);
+          }
+        });
+      }
+    },
+  };
 
   // ================================================================
   // Section 6 — Theme module
@@ -861,6 +1120,7 @@ document.addEventListener('DOMContentLoaded', () => {
     timerModule.init();
     nameModule.init();
     taskModule.init();
+    linkModule.init();
   }
 
   init();
