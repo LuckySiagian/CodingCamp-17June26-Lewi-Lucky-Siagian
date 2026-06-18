@@ -451,10 +451,135 @@ document.addEventListener('DOMContentLoaded', () => {
     },
 
     /**
+     * Flip the done state of the task with the given id, then persist and re-render.
+     *
+     * @param {string|number} id - The task's data-id value (will be cast to Number).
+     * Requirements: 5.3, 5.4
+     */
+    toggleTask(id) {
+      const task = tasks.find(t => t.id === Number(id));
+      if (!task) return;
+      task.done = !task.done;
+      this.persistTasks();
+      this.renderList();
+    },
+
+    /**
+     * Remove the task with the given id from the list, then persist and re-render.
+     *
+     * @param {string|number} id - The task's data-id value (will be cast to Number).
+     * Requirements: 5.8
+     */
+    deleteTask(id) {
+      tasks = tasks.filter(t => t.id !== Number(id));
+      this.persistTasks();
+      this.renderList();
+    },
+
+    /**
+     * Switch a task list item into inline-edit mode.
+     * Replaces the .task-text span with a focused <input> pre-filled with the
+     * current text, and replaces the action buttons with Save / Cancel buttons.
+     *
+     * @param {string|number} id - The task's data-id value.
+     * Requirements: 5.5
+     */
+    beginEdit(id) {
+      const list = document.getElementById('todo-list');
+      if (!list) return;
+
+      const li = list.querySelector(`li[data-id="${id}"]`);
+      if (!li) return;
+
+      const task = tasks.find(t => t.id === Number(id));
+      if (!task) return;
+
+      // Replace .task-text span with an inline input
+      const span = li.querySelector('.task-text');
+      if (span) {
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'task-edit-input';
+        input.value = task.text;
+
+        // Keyboard shortcuts: Enter → save, Escape → cancel
+        input.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            this.saveEdit(id, input.value);
+          } else if (e.key === 'Escape') {
+            e.preventDefault();
+            this.cancelEdit(id);
+          }
+        });
+
+        li.replaceChild(input, span);
+        input.focus();
+      }
+
+      // Replace action buttons with Save / Cancel
+      const actions = li.querySelector('.task-actions');
+      if (actions) {
+        actions.innerHTML = '';
+
+        const saveBtn = document.createElement('button');
+        saveBtn.className = 'btn btn-primary btn-sm';
+        saveBtn.dataset.action = 'save-edit';
+        saveBtn.textContent = '💾 Save';
+
+        const cancelBtn = document.createElement('button');
+        cancelBtn.className = 'btn btn-secondary btn-sm';
+        cancelBtn.dataset.action = 'cancel-edit';
+        cancelBtn.textContent = '✖ Cancel';
+
+        actions.appendChild(saveBtn);
+        actions.appendChild(cancelBtn);
+      }
+    },
+
+    /**
+     * Confirm an inline edit. Trims the new text:
+     * - If empty/whitespace-only → discard edit, restore original view.
+     * - If valid → update task.text, persist, and re-render.
+     *
+     * @param {string|number} id      - The task's data-id value.
+     * @param {string}        newText - The raw value from the inline input.
+     * Requirements: 5.6, 5.7
+     */
+    saveEdit(id, newText) {
+      const trimmed = (newText || '').trim();
+
+      if (!trimmed) {
+        // Discard — restore original read-only view
+        this.cancelEdit(id);
+        return;
+      }
+
+      const task = tasks.find(t => t.id === Number(id));
+      if (!task) return;
+
+      task.text = trimmed;
+      this.persistTasks();
+      this.renderList();
+    },
+
+    /**
+     * Cancel an inline edit by re-rendering the list from unchanged in-memory state,
+     * effectively restoring the read-only view.
+     *
+     * @param {string|number} id - The task's data-id value (unused beyond type hint).
+     * Requirements: 5.5 (cancel path)
+     */
+    cancelEdit(id) {
+      this.renderList();
+    },
+
+    /**
      * Initialize the Task module:
      * 1. Inject #task-error-msg element into #form-add-task (guards against duplicates).
      * 2. Load persisted tasks and render the initial list.
      * 3. Bind the #form-add-task submit event to addTask().
+     * 4. Bind delegated click handler on #todo-list for toggle, delete, and edit actions.
      *
      * Requirements: 7.2
      */
@@ -482,6 +607,50 @@ document.addEventListener('DOMContentLoaded', () => {
           e.preventDefault();
           const inputValue = inputEl ? inputEl.value : '';
           this.addTask(inputValue);
+        });
+      }
+
+      // --- Delegated click handler on #todo-list ---
+      // Handles: checkbox toggle, delete, edit, save-edit, cancel-edit
+      const list = document.getElementById('todo-list');
+      if (list) {
+        list.addEventListener('click', (e) => {
+          // 1. Checkbox toggle
+          if (e.target.matches('.task-checkbox')) {
+            const id = e.target.closest('li').dataset.id;
+            this.toggleTask(id);
+            return;
+          }
+
+          // 2. Delete button
+          if (e.target.closest('[data-action="delete"]')) {
+            const id = e.target.closest('li').dataset.id;
+            this.deleteTask(id);
+            return;
+          }
+
+          // 3. Edit button
+          if (e.target.closest('[data-action="edit"]')) {
+            const id = e.target.closest('li').dataset.id;
+            this.beginEdit(id);
+            return;
+          }
+
+          // 4. Save-edit button
+          if (e.target.closest('[data-action="save-edit"]')) {
+            const li = e.target.closest('li');
+            const id = li.dataset.id;
+            const inputVal = li.querySelector('.task-edit-input');
+            this.saveEdit(id, inputVal ? inputVal.value : '');
+            return;
+          }
+
+          // 5. Cancel-edit button
+          if (e.target.closest('[data-action="cancel-edit"]')) {
+            const id = e.target.closest('li').dataset.id;
+            this.cancelEdit(id);
+            return;
+          }
         });
       }
     },

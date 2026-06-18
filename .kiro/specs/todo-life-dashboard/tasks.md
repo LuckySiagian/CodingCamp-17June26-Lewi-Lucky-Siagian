@@ -154,7 +154,7 @@ Implementation language: **Vanilla JavaScript** (ES2020, no build step).
 - [ ] 8. Checkpoint — focus timer
   - Ensure all tests pass, ask the user if questions arise.
 
-- [-] 9. Implement Task Manager module
+- [x] 9. Implement Task Manager module
   - Implement `taskModule.{init, addTask, deleteTask, toggleTask, beginEdit, saveEdit, cancelEdit, renderList, persistTasks, loadTasks}` in **Section 4**.
   - In-memory state: `let tasks = []`.
   - Each Task: `{ id: Date.now(), text: String, done: Boolean }`.
@@ -181,7 +181,7 @@ Implementation language: **Vanilla JavaScript** (ES2020, no build step).
     - **Property 7: Adding a valid task grows the list by exactly one**
     - **Validates: Requirements 5.1**
 
-  - [ ] 9.5 Implement `taskModule.toggleTask`
+  - [x] 9.5 Implement `taskModule.toggleTask`
     - Flip `done` on the matching task, call `persistTasks` and `renderList`.
     - _Requirements: 5.3, 5.4_
 
@@ -189,7 +189,7 @@ Implementation language: **Vanilla JavaScript** (ES2020, no build step).
     - **Property 9: Task completion toggle is a round-trip**
     - **Validates: Requirements 5.3, 5.4**
 
-  - [ ] 9.7 Implement `taskModule.deleteTask`
+  - [x] 9.7 Implement `taskModule.deleteTask`
     - Filter `tasks` by `id`, call `persistTasks` and `renderList`.
     - _Requirements: 5.8_
 
@@ -197,7 +197,7 @@ Implementation language: **Vanilla JavaScript** (ES2020, no build step).
     - **Property 11: Deleting a task removes exactly that task from the list**
     - **Validates: Requirements 5.8**
 
-  - [ ] 9.9 Implement `taskModule.beginEdit`, `taskModule.saveEdit`, `taskModule.cancelEdit`
+  - [x] 9.9 Implement `taskModule.beginEdit`, `taskModule.saveEdit`, `taskModule.cancelEdit`
     - `beginEdit` replaces `.task-text` span with a focused `<input class="task-edit-input">`.
     - `saveEdit` trims; if empty/whitespace discard and restore original text;
       otherwise update `task.text`, persist, and render.
