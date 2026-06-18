@@ -175,6 +175,11 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   const greetingModule = {
+    _state: {
+      lastHour: null,
+      lastUserName: null,
+    },
+
     /**
      * Compute and render the greeting into #greeting.
      *
@@ -182,6 +187,15 @@ document.addEventListener('DOMContentLoaded', () => {
      */
     render(userName) {
       const hour = new Date().getHours();
+
+      // Skip rendering if hour and username haven't changed (prevents redundant DOM writes)
+      if (this._state.lastHour === hour && this._state.lastUserName === userName) {
+        return;
+      }
+
+      this._state.lastHour = hour;
+      this._state.lastUserName = userName;
+
       const phrase = getGreetingPhrase(hour, userName);
       const el = document.getElementById('greeting');
       if (el) {
@@ -309,6 +323,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Closure variable — shared by all taskModule methods
   let tasks = [];
+  let editingTaskId = null;
 
   const taskModule = {
     /**
@@ -379,40 +394,87 @@ document.addEventListener('DOMContentLoaded', () => {
           li.classList.add('done');
         }
 
-        // Checkbox
-        const checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-        checkbox.className = 'task-checkbox';
-        checkbox.setAttribute('aria-label', 'Mark done');
-        if (task.done) {
-          checkbox.checked = true;
+        if (task.id === editingTaskId) {
+          // Render inline edit input
+          const input = document.createElement('input');
+          input.type = 'text';
+          input.className = 'task-edit-input';
+          input.value = task.text;
+
+          // Keyboard shortcuts: Enter → save, Escape → cancel
+          input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              this.saveEdit(task.id, input.value);
+            } else if (e.key === 'Escape') {
+              e.preventDefault();
+              this.cancelEdit(task.id);
+            }
+          });
+
+          // Action buttons container
+          const actions = document.createElement('div');
+          actions.className = 'task-actions';
+
+          const saveBtn = document.createElement('button');
+          saveBtn.className = 'btn btn-primary btn-sm';
+          saveBtn.dataset.action = 'save-edit';
+          saveBtn.textContent = '💾 Save';
+
+          const cancelBtn = document.createElement('button');
+          cancelBtn.className = 'btn btn-secondary btn-sm';
+          cancelBtn.dataset.action = 'cancel-edit';
+          cancelBtn.textContent = '✖ Cancel';
+
+          actions.appendChild(saveBtn);
+          actions.appendChild(cancelBtn);
+
+          li.appendChild(input);
+          li.appendChild(actions);
+
+          // Focus input after appending to DOM
+          setTimeout(() => input.focus(), 0);
+        } else {
+          // Checkbox
+          const checkbox = document.createElement('input');
+          checkbox.type = 'checkbox';
+          checkbox.className = 'task-checkbox';
+          checkbox.setAttribute('aria-label', 'Mark done');
+          if (task.done) {
+            checkbox.checked = true;
+          }
+
+          // Text span
+          const span = document.createElement('span');
+          span.className = 'task-text';
+          span.textContent = task.text;
+
+          // Action buttons container
+          const actions = document.createElement('div');
+          actions.className = 'task-actions';
+
+          const editBtn = document.createElement('button');
+          editBtn.className = 'btn btn-icon btn-secondary';
+          editBtn.dataset.action = 'edit';
+          editBtn.textContent = '✏️';
+          // Disable edit for completed tasks
+          if (task.done) {
+            editBtn.disabled = true;
+            editBtn.title = 'Uncheck to enable editing';
+          }
+
+          const deleteBtn = document.createElement('button');
+          deleteBtn.className = 'btn btn-icon btn-danger';
+          deleteBtn.dataset.action = 'delete';
+          deleteBtn.textContent = '🗑️';
+
+          actions.appendChild(editBtn);
+          actions.appendChild(deleteBtn);
+
+          li.appendChild(checkbox);
+          li.appendChild(span);
+          li.appendChild(actions);
         }
-
-        // Text span
-        const span = document.createElement('span');
-        span.className = 'task-text';
-        span.textContent = task.text;
-
-        // Action buttons container
-        const actions = document.createElement('div');
-        actions.className = 'task-actions';
-
-        const editBtn = document.createElement('button');
-        editBtn.className = 'btn btn-icon btn-secondary';
-        editBtn.dataset.action = 'edit';
-        editBtn.textContent = '✏️';
-
-        const deleteBtn = document.createElement('button');
-        deleteBtn.className = 'btn btn-icon btn-danger';
-        deleteBtn.dataset.action = 'delete';
-        deleteBtn.textContent = '🗑️';
-
-        actions.appendChild(editBtn);
-        actions.appendChild(deleteBtn);
-
-        li.appendChild(checkbox);
-        li.appendChild(span);
-        li.appendChild(actions);
 
         list.appendChild(li);
       });
@@ -514,56 +576,8 @@ document.addEventListener('DOMContentLoaded', () => {
      * Requirements: 5.5
      */
     beginEdit(id) {
-      const list = document.getElementById('todo-list');
-      if (!list) return;
-
-      const li = list.querySelector(`li[data-id="${id}"]`);
-      if (!li) return;
-
-      const task = tasks.find(t => t.id === Number(id));
-      if (!task) return;
-
-      // Replace .task-text span with an inline input
-      const span = li.querySelector('.task-text');
-      if (span) {
-        const input = document.createElement('input');
-        input.type = 'text';
-        input.className = 'task-edit-input';
-        input.value = task.text;
-
-        // Keyboard shortcuts: Enter → save, Escape → cancel
-        input.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter') {
-            e.preventDefault();
-            this.saveEdit(id, input.value);
-          } else if (e.key === 'Escape') {
-            e.preventDefault();
-            this.cancelEdit(id);
-          }
-        });
-
-        li.replaceChild(input, span);
-        input.focus();
-      }
-
-      // Replace action buttons with Save / Cancel
-      const actions = li.querySelector('.task-actions');
-      if (actions) {
-        actions.innerHTML = '';
-
-        const saveBtn = document.createElement('button');
-        saveBtn.className = 'btn btn-primary btn-sm';
-        saveBtn.dataset.action = 'save-edit';
-        saveBtn.textContent = '💾 Save';
-
-        const cancelBtn = document.createElement('button');
-        cancelBtn.className = 'btn btn-secondary btn-sm';
-        cancelBtn.dataset.action = 'cancel-edit';
-        cancelBtn.textContent = '✖ Cancel';
-
-        actions.appendChild(saveBtn);
-        actions.appendChild(cancelBtn);
-      }
+      editingTaskId = Number(id);
+      this.renderList();
     },
 
     /**
@@ -613,6 +627,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!task) return;
 
       task.text = trimmed;
+      editingTaskId = null;
       this.persistTasks();
       this.renderList();
     },
@@ -625,6 +640,7 @@ document.addEventListener('DOMContentLoaded', () => {
      * Requirements: 5.5 (cancel path)
      */
     cancelEdit(id) {
+      editingTaskId = null;
       this.renderList();
     },
 
@@ -725,6 +741,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Closure variable — shared by all linkModule methods
   let links = [];
+  let editingLinkId = null;
 
   const linkModule = {
     /**
@@ -805,27 +822,93 @@ document.addEventListener('DOMContentLoaded', () => {
         li.className = 'link-item';
         li.dataset.id = link.id;
 
-        // Anchor element
-        const anchor = document.createElement('a');
-        anchor.className = 'link-anchor';
-        anchor.href = link.url;
-        anchor.target = '_blank';
-        anchor.rel = 'noopener noreferrer';
-        anchor.textContent = link.label;
+        if (link.id === editingLinkId) {
+          // Render inline inputs
+          const wrapper = document.createElement('div');
+          wrapper.className = 'link-edit-inputs';
 
-        // Action buttons container
-        const actions = document.createElement('div');
-        actions.className = 'link-actions';
+          const labelInput = document.createElement('input');
+          labelInput.type = 'text';
+          labelInput.className = 'input-text link-edit-label';
+          labelInput.value = link.label;
+          labelInput.maxLength = 100;
+          labelInput.placeholder = 'Label';
 
-        const deleteBtn = document.createElement('button');
-        deleteBtn.className = 'btn btn-icon btn-danger';
-        deleteBtn.dataset.action = 'delete';
-        deleteBtn.textContent = '🗑️';
+          const urlInput = document.createElement('input');
+          urlInput.type = 'url';
+          urlInput.className = 'input-text link-edit-url';
+          urlInput.value = link.url;
+          urlInput.placeholder = 'https://…';
 
-        actions.appendChild(deleteBtn);
+          wrapper.appendChild(labelInput);
+          wrapper.appendChild(urlInput);
 
-        li.appendChild(anchor);
-        li.appendChild(actions);
+          // Keyboard shortcuts: Enter → save, Escape → cancel
+          [labelInput, urlInput].forEach(inp => {
+            inp.addEventListener('keydown', (e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                this.saveEditLink(link.id, labelInput.value, urlInput.value);
+              } else if (e.key === 'Escape') {
+                e.preventDefault();
+                this.cancelEditLink(link.id);
+              }
+            });
+          });
+
+          // Action buttons container
+          const actions = document.createElement('div');
+          actions.className = 'link-actions';
+
+          const saveBtn = document.createElement('button');
+          saveBtn.className = 'btn btn-primary btn-sm';
+          saveBtn.dataset.action = 'save-link-edit';
+          saveBtn.textContent = '💾 Save';
+
+          const cancelBtn = document.createElement('button');
+          cancelBtn.className = 'btn btn-secondary btn-sm';
+          cancelBtn.dataset.action = 'cancel-link-edit';
+          cancelBtn.textContent = '✖ Cancel';
+
+          actions.appendChild(saveBtn);
+          actions.appendChild(cancelBtn);
+
+          li.appendChild(wrapper);
+          li.appendChild(actions);
+
+          // Focus label input after appending to DOM
+          setTimeout(() => labelInput.focus(), 0);
+        } else {
+          // Anchor element
+          const anchor = document.createElement('a');
+          anchor.className = 'link-anchor';
+          anchor.href = link.url;
+          anchor.target = '_blank';
+          anchor.rel = 'noopener noreferrer';
+          anchor.textContent = link.label;
+
+          // Action buttons container
+          const actions = document.createElement('div');
+          actions.className = 'link-actions';
+
+          const editBtn = document.createElement('button');
+          editBtn.className = 'btn btn-icon btn-secondary';
+          editBtn.dataset.action = 'edit-link';
+          editBtn.textContent = '✏️';
+          editBtn.title = 'Edit link';
+
+          const deleteBtn = document.createElement('button');
+          deleteBtn.className = 'btn btn-icon btn-danger';
+          deleteBtn.dataset.action = 'delete';
+          deleteBtn.textContent = '🗑️';
+          deleteBtn.title = 'Delete link';
+
+          actions.appendChild(editBtn);
+          actions.appendChild(deleteBtn);
+
+          li.appendChild(anchor);
+          li.appendChild(actions);
+        }
 
         list.appendChild(li);
       });
@@ -842,11 +925,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     /**
      * Validate the URL string using the browser's built-in <input type="url"> constraint.
+     * Enforces the http:// or https:// protocol to mitigate Stored XSS.
      *
      * @param {string} urlString - The URL to validate.
      * @returns {boolean} true if valid, false otherwise.
      */
     _isValidUrl(urlString) {
+      const trimmed = urlString.trim().toLowerCase();
+      if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
+        return false;
+      }
       const testInput = document.createElement('input');
       testInput.type = 'url';
       testInput.value = urlString;
@@ -929,6 +1017,70 @@ document.addEventListener('DOMContentLoaded', () => {
     },
 
     /**
+     * Switch a link list item into inline-edit mode.
+     * Replaces the anchor with two inputs (label + URL) and Save/Cancel buttons.
+     *
+     * @param {string|number} id - The link's data-id value.
+     */
+    beginEditLink(id) {
+      editingLinkId = Number(id);
+      this.renderList();
+    },
+
+    /**
+     * Confirm an inline link edit.
+     * Validates label (non-empty) and URL (valid), then updates and re-renders.
+     *
+     * @param {string|number} id    - The link's data-id value.
+     * @param {string}        label - New label from the inline input.
+     * @param {string}        url   - New URL from the inline input.
+     */
+    saveEditLink(id, label, url) {
+      const trimmedLabel = (label || '').trim();
+      const trimmedUrl   = (url   || '').trim();
+
+      // Find the li for inline error display
+      const list = document.getElementById('links-list');
+      const li = list ? list.querySelector(`li[data-id="${id}"]`) : null;
+
+      const showInlineError = (msg) => {
+        if (!li) return;
+        let err = li.querySelector('.link-edit-error');
+        if (!err) {
+          err = document.createElement('p');
+          err.className = 'error-msg link-edit-error';
+          li.appendChild(err);
+        }
+        err.textContent = msg;
+      };
+
+      if (!trimmedLabel || !trimmedUrl) {
+        showInlineError('Please enter both a label and a URL.');
+        return;
+      }
+      if (!this._isValidUrl(trimmedUrl)) {
+        showInlineError('Please enter a valid URL (e.g. https://example.com).');
+        return;
+      }
+
+      const link = links.find(l => l.id === Number(id));
+      if (!link) return;
+      link.label = trimmedLabel.slice(0, 100);
+      link.url   = trimmedUrl;
+      editingLinkId = null;
+      this.persistLinks();
+      this.renderList();
+    },
+
+    /**
+     * Cancel an inline link edit — re-render from unchanged in-memory state.
+     */
+    cancelEditLink(id) {
+      editingLinkId = null;
+      this.renderList();
+    },
+
+    /**
      * Initialize the Link module:
      * 1. Inject #link-error-msg element dynamically after #form-add-link (guarded).
      * 2. Load persisted links and render the initial list.
@@ -972,12 +1124,35 @@ document.addEventListener('DOMContentLoaded', () => {
         });
       }
 
-      // --- Delegated click handler on #links-list for delete ---
+      // --- Delegated click handler on #links-list for delete and edit ---
       if (linksList) {
         linksList.addEventListener('click', (e) => {
+          // Delete
           if (e.target.closest('[data-action="delete"]')) {
             const id = e.target.closest('li').dataset.id;
             this.deleteLink(id);
+            return;
+          }
+          // Begin edit
+          if (e.target.closest('[data-action="edit-link"]')) {
+            const id = e.target.closest('li').dataset.id;
+            this.beginEditLink(id);
+            return;
+          }
+          // Save edit
+          if (e.target.closest('[data-action="save-link-edit"]')) {
+            const li = e.target.closest('li');
+            const id = li.dataset.id;
+            const labelVal = li.querySelector('.link-edit-label');
+            const urlVal   = li.querySelector('.link-edit-url');
+            this.saveEditLink(id, labelVal ? labelVal.value : '', urlVal ? urlVal.value : '');
+            return;
+          }
+          // Cancel edit
+          if (e.target.closest('[data-action="cancel-link-edit"]')) {
+            const id = e.target.closest('li').dataset.id;
+            this.cancelEditLink(id);
+            return;
           }
         });
       }

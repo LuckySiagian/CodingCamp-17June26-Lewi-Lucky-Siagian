@@ -1,27 +1,29 @@
 /* ================================================================
    TO-DO LIFE DASHBOARD — style.css
    Supports light and dark mode via [data-theme="dark"] on <html>
-================================================================ */
+   Premium Glassmorphic Redesign
+ ================================================================ */
 
 /* ----------------------------------------------------------------
    1. CSS Custom Properties (Design Tokens)
----------------------------------------------------------------- */
+ ---------------------------------------------------------------- */
 :root {
   /* Colors — Light Mode */
-  --color-bg:           #f4f6f9;
-  --color-surface:      #ffffff;
-  --color-border:       #e0e4ec;
-  --color-text-primary: #1a1d23;
-  --color-text-muted:   #6b7280;
-  --color-accent:       #4f6ef7;
-  --color-accent-hover: #3a57e8;
+  --color-bg-base:      #f0f2f5;
+  --color-bg:           linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+  --color-surface:      rgba(255, 255, 255, 0.75);
+  --color-border:       rgba(226, 232, 240, 0.8);
+  --color-text-primary: #0f172a;
+  --color-text-muted:   #64748b;
+  --color-accent:       hsl(250, 85%, 60%);
+  --color-accent-hover: hsl(250, 85%, 52%);
   --color-danger:       #ef4444;
   --color-danger-hover: #dc2626;
-  --color-success:      #22c55e;
-  --color-shadow:       rgba(0, 0, 0, 0.07);
+  --color-success:      #10b981;
+  --color-shadow:       rgba(15, 23, 42, 0.06);
 
   /* Typography */
-  --font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
   --font-size-base: 1rem;
 
   /* Spacing */
@@ -37,23 +39,25 @@
   --radius-lg: 1.25rem;
 
   /* Transitions */
-  --transition: 0.2s ease;
+  --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 [data-theme="dark"] {
-  --color-bg:           #0f1117;
-  --color-surface:      #1c1f2a;
-  --color-border:       #2d3142;
-  --color-text-primary: #e8eaf0;
-  --color-text-muted:   #9399a6;
-  --color-accent:       #6b83f7;
-  --color-accent-hover: #8196f9;
-  --color-shadow:       rgba(0, 0, 0, 0.35);
+  /* Colors — Dark Mode */
+  --color-bg-base:      #090a0f;
+  --color-bg:           linear-gradient(135deg, #090a0f 0%, #12131c 100%);
+  --color-surface:      rgba(22, 24, 38, 0.7);
+  --color-border:       rgba(255, 255, 255, 0.07);
+  --color-text-primary: #f8fafc;
+  --color-text-muted:   #94a3b8;
+  --color-accent:       hsl(263, 90%, 70%);
+  --color-accent-hover: hsl(263, 90%, 78%);
+  --color-shadow:       rgba(0, 0, 0, 0.3);
 }
 
 /* ----------------------------------------------------------------
    2. Reset & Base
----------------------------------------------------------------- */
+ ---------------------------------------------------------------- */
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -68,11 +72,72 @@ html {
 body {
   font-family: var(--font-family);
   font-size: var(--font-size-base);
-  background-color: var(--color-bg);
+  background: var(--color-bg);
+  background-color: var(--color-bg-base);
   color: var(--color-text-primary);
   line-height: 1.6;
   transition: background-color var(--transition), color var(--transition);
   min-height: 100vh;
+  position: relative;
+}
+
+/* Ambient glow backdrop elements */
+.ambient-glow {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+  opacity: 0.12;
+  mix-blend-mode: multiply;
+  animation: float 25s infinite alternate ease-in-out;
+  transition: background var(--transition);
+}
+
+[data-theme="dark"] .blob {
+  opacity: 0.2;
+  mix-blend-mode: screen;
+}
+
+.blob-1 {
+  width: 450px;
+  height: 450px;
+  background: radial-gradient(circle, var(--color-accent) 0%, rgba(255,255,255,0) 70%);
+  top: -10%;
+  left: -5%;
+  animation-duration: 25s;
+}
+
+.blob-2 {
+  width: 550px;
+  height: 550px;
+  background: radial-gradient(circle, #3b82f6 0%, rgba(255,255,255,0) 70%);
+  bottom: -10%;
+  right: -5%;
+  animation-delay: -5s;
+  animation-duration: 30s;
+}
+
+.blob-3 {
+  width: 380px;
+  height: 380px;
+  background: radial-gradient(circle, #ec4899 0%, rgba(255,255,255,0) 70%);
+  top: 35%;
+  left: 55%;
+  animation-delay: -10s;
+  animation-duration: 20s;
+}
+
+@keyframes float {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(50px, -50px) scale(1.1); }
+  100% { transform: translate(-30px, 30px) scale(0.9); }
 }
 
 /* Visually hidden utility (for screen readers) */
@@ -89,7 +154,7 @@ body {
 
 /* ----------------------------------------------------------------
    3. Header
----------------------------------------------------------------- */
+ ---------------------------------------------------------------- */
 .dashboard-header {
   display: flex;
   align-items: center;
@@ -97,10 +162,12 @@ body {
   flex-wrap: wrap;
   gap: var(--space-md);
   padding: var(--space-lg) var(--space-xl);
-  background-color: var(--color-surface);
+  background: var(--color-surface);
   border-bottom: 1px solid var(--color-border);
-  box-shadow: 0 2px 8px var(--color-shadow);
-  transition: background-color var(--transition);
+  box-shadow: 0 4px 30px var(--color-shadow);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transition: background var(--transition), border-color var(--transition);
 }
 
 .header-left {
@@ -117,30 +184,42 @@ body {
 }
 
 .date {
-  font-size: 0.85rem;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 600;
   color: var(--color-text-muted);
-  letter-spacing: 0.02em;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 
 .clock {
-  font-size: 2.5rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
+  font-family: 'Outfit', sans-serif;
+  font-size: 3rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, var(--color-accent) 0%, #3b82f6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 2px 8px rgba(79, 110, 247, 0.15));
   line-height: 1.1;
-  color: var(--color-accent);
+}
+
+[data-theme="dark"] .clock {
+  filter: drop-shadow(0 0 15px rgba(139, 92, 246, 0.45));
 }
 
 .greeting {
-  font-size: 1rem;
-  color: var(--color-text-muted);
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: var(--color-text-primary);
 }
 
 /* ----------------------------------------------------------------
    4. Main Layout — CSS Grid
----------------------------------------------------------------- */
+ ---------------------------------------------------------------- */
 .dashboard-main {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: var(--space-lg);
   padding: var(--space-xl);
   max-width: 1400px;
@@ -149,102 +228,126 @@ body {
 
 /* ----------------------------------------------------------------
    5. Cards
----------------------------------------------------------------- */
+ ---------------------------------------------------------------- */
 .card {
-  background-color: var(--color-surface);
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   padding: var(--space-lg);
-  box-shadow: 0 2px 12px var(--color-shadow);
+  box-shadow: 0 8px 32px var(--color-shadow);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
-  transition: background-color var(--transition), border-color var(--transition);
+  transition: transform var(--transition), box-shadow var(--transition), background var(--transition), border-color var(--transition);
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="dark"] .card:hover {
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
 }
 
 .card-title {
-  font-size: 1.1rem;
-  font-weight: 600;
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.25rem;
+  font-weight: 700;
   color: var(--color-text-primary);
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
 }
 
 /* ----------------------------------------------------------------
    6. Buttons
----------------------------------------------------------------- */
+ ---------------------------------------------------------------- */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: var(--space-xs);
-  padding: 0.5rem 1rem;
+  padding: 0.65rem 1.25rem;
   border: none;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   font-family: inherit;
   font-size: 0.9rem;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
-  transition: background-color var(--transition), opacity var(--transition), transform 0.1s;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   white-space: nowrap;
 }
 
 .btn:active {
-  transform: scale(0.97);
+  transform: scale(0.96);
 }
 
 .btn:disabled {
-  opacity: 0.45;
+  opacity: 0.4;
   cursor: not-allowed;
   transform: none;
 }
 
 .btn-primary {
-  background-color: var(--color-accent);
+  background: linear-gradient(135deg, var(--color-accent) 0%, #3b82f6 100%);
   color: #fff;
+  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.25);
 }
 
 .btn-primary:hover:not(:disabled) {
-  background-color: var(--color-accent-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
 }
 
 .btn-secondary {
   background-color: var(--color-border);
   color: var(--color-text-primary);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .btn-secondary:hover:not(:disabled) {
   background-color: var(--color-text-muted);
-  color: var(--color-surface);
-}
-
-.btn-danger {
-  background-color: var(--color-danger);
   color: #fff;
 }
 
+.btn-danger {
+  background: linear-gradient(135deg, var(--color-danger) 0%, #f43f5e 100%);
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.25);
+}
+
 .btn-danger:hover:not(:disabled) {
-  background-color: var(--color-danger-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
 }
 
 .btn-icon {
-  padding: 0.35rem 0.5rem;
-  font-size: 0.85rem;
+  padding: 0.45rem 0.6rem;
+  font-size: 0.9rem;
   border-radius: var(--radius-sm);
 }
 
 /* ----------------------------------------------------------------
    7. Input Fields
----------------------------------------------------------------- */
+ ---------------------------------------------------------------- */
 .input-text {
   flex: 1;
-  padding: 0.5rem 0.75rem;
+  padding: 0.65rem 1rem;
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  background-color: var(--color-bg);
+  border-radius: var(--radius-md);
+  background-color: rgba(255, 255, 255, 0.05);
   color: var(--color-text-primary);
   font-family: inherit;
-  font-size: 0.9rem;
-  transition: border-color var(--transition), background-color var(--transition);
+  font-size: 0.95rem;
+  transition: all var(--transition);
   min-width: 0;
+}
+
+[data-theme="light"] .input-text {
+  background-color: rgba(255, 255, 255, 0.4);
 }
 
 .input-text::placeholder {
@@ -254,7 +357,12 @@ body {
 .input-text:focus {
   outline: none;
   border-color: var(--color-accent);
-  box-shadow: 0 0 0 3px rgba(79, 110, 247, 0.15);
+  box-shadow: 0 0 0 4px rgba(79, 110, 247, 0.2);
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="light"] .input-text:focus {
+  background-color: rgba(255, 255, 255, 0.9);
 }
 
 .input-row {
@@ -265,15 +373,20 @@ body {
 
 /* ----------------------------------------------------------------
    8. Focus Timer
----------------------------------------------------------------- */
+ ---------------------------------------------------------------- */
 .timer-display {
-  font-size: 4rem;
-  font-weight: 700;
+  font-family: 'Outfit', sans-serif;
+  font-size: 4.5rem;
+  font-weight: 800;
   text-align: center;
-  letter-spacing: 0.06em;
-  color: var(--color-accent);
-  padding: var(--space-md) 0;
+  letter-spacing: 0.04em;
+  color: var(--color-text-primary);
+  padding: var(--space-lg) 0;
   font-variant-numeric: tabular-nums;
+  filter: drop-shadow(0 4px 10px var(--color-shadow));
+  background: linear-gradient(135deg, var(--color-text-primary) 0%, var(--color-text-muted) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .timer-controls {
@@ -285,7 +398,7 @@ body {
 
 /* ----------------------------------------------------------------
    9. To-Do List
----------------------------------------------------------------- */
+ ---------------------------------------------------------------- */
 .task-list {
   list-style: none;
   display: flex;
@@ -297,15 +410,30 @@ body {
   display: flex;
   align-items: center;
   gap: var(--space-sm);
-  padding: 0.6rem 0.75rem;
+  padding: 0.75rem 1rem;
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  background-color: var(--color-bg);
-  transition: background-color var(--transition), opacity var(--transition);
+  border-radius: var(--radius-md);
+  background-color: rgba(255, 255, 255, 0.03);
+  transition: all var(--transition);
+  animation: slideIn 0.3s ease;
+}
+
+[data-theme="light"] .task-item {
+  background-color: rgba(0, 0, 0, 0.015);
+}
+
+.task-item:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+  border-color: var(--color-accent);
+}
+
+[data-theme="light"] .task-item:hover {
+  background-color: rgba(255, 255, 255, 0.7);
 }
 
 .task-item.done {
   opacity: 0.55;
+  background-color: rgba(255, 255, 255, 0.01);
 }
 
 .task-item.done .task-text {
@@ -314,28 +442,35 @@ body {
 }
 
 .task-checkbox {
-  width: 1.1rem;
-  height: 1.1rem;
+  width: 1.25rem;
+  height: 1.25rem;
   accent-color: var(--color-success);
   cursor: pointer;
   flex-shrink: 0;
+  border-radius: var(--radius-sm);
 }
 
 .task-text {
   flex: 1;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   word-break: break-word;
+  color: var(--color-text-primary);
 }
 
 .task-edit-input {
   flex: 1;
-  padding: 0.2rem 0.4rem;
+  padding: 0.4rem 0.75rem;
   border: 1px solid var(--color-accent);
   border-radius: var(--radius-sm);
-  background-color: var(--color-bg);
+  background-color: rgba(255, 255, 255, 0.08);
   color: var(--color-text-primary);
   font-family: inherit;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
+  outline: none;
+}
+
+[data-theme="light"] .task-edit-input {
+  background-color: rgba(255, 255, 255, 0.9);
 }
 
 .task-actions {
@@ -344,9 +479,14 @@ body {
   flex-shrink: 0;
 }
 
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 /* ----------------------------------------------------------------
    10. Quick Links
----------------------------------------------------------------- */
+ ---------------------------------------------------------------- */
 .links-list {
   list-style: none;
   display: flex;
@@ -358,21 +498,37 @@ body {
   display: flex;
   align-items: center;
   gap: var(--space-sm);
-  padding: 0.5rem 0.75rem;
+  padding: 0.65rem 1rem;
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  background-color: var(--color-bg);
-  transition: background-color var(--transition);
+  border-radius: var(--radius-md);
+  background-color: rgba(255, 255, 255, 0.03);
+  transition: all var(--transition);
+  animation: slideIn 0.3s ease;
+}
+
+[data-theme="light"] .link-item {
+  background-color: rgba(0, 0, 0, 0.015);
+}
+
+.link-item:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+  border-color: var(--color-accent);
+}
+
+[data-theme="light"] .link-item:hover {
+  background-color: rgba(255, 255, 255, 0.7);
 }
 
 .link-anchor {
   flex: 1;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   color: var(--color-accent);
   text-decoration: none;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  font-weight: 500;
+  transition: color var(--transition);
 }
 
 .link-anchor:hover {
@@ -388,32 +544,37 @@ body {
 
 /* ----------------------------------------------------------------
    11. Empty / Error Messages
----------------------------------------------------------------- */
+ ---------------------------------------------------------------- */
 .empty-msg {
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   color: var(--color-text-muted);
   text-align: center;
-  padding: var(--space-sm) 0;
+  padding: var(--space-md) 0;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-md);
 }
 
 .error-msg {
   font-size: 0.85rem;
   color: var(--color-danger);
   padding: var(--space-xs) 0;
+  width: 100%;
 }
 
 /* ----------------------------------------------------------------
    12. Modal
----------------------------------------------------------------- */
+ ---------------------------------------------------------------- */
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(9, 10, 15, 0.6);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
   padding: var(--space-md);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 .modal-overlay[hidden] {
@@ -422,19 +583,30 @@ body {
 
 .modal-box {
   background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   padding: var(--space-xl);
   width: 100%;
-  max-width: 400px;
+  max-width: 420px;
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 20px 50px var(--color-shadow);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  animation: modalIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes modalIn {
+  from { opacity: 0; transform: scale(0.9) translateY(20px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
 }
 
 .modal-title {
-  font-size: 1.2rem;
-  font-weight: 600;
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
 }
 
 .modal-actions {
@@ -445,15 +617,41 @@ body {
 }
 
 /* ----------------------------------------------------------------
+   12b. Small button variant & Quick Links inline edit
+ ---------------------------------------------------------------- */
+.btn-sm {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.8rem;
+  border-radius: var(--radius-sm);
+}
+
+.link-edit-inputs {
+  display: flex;
+  flex: 1;
+  gap: var(--space-xs);
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.link-edit-inputs .input-text {
+  min-width: 80px;
+}
+
+.link-edit-error {
+  width: 100%;
+  margin-top: var(--space-xs);
+}
+
+/* ----------------------------------------------------------------
    13. Responsive — Stack on small screens
----------------------------------------------------------------- */
+ ---------------------------------------------------------------- */
 @media (max-width: 640px) {
   .clock {
-    font-size: 1.8rem;
+    font-size: 2.2rem;
   }
 
   .timer-display {
-    font-size: 3rem;
+    font-size: 3.5rem;
   }
 
   .dashboard-header {
