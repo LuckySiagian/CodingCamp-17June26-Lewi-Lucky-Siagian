@@ -194,7 +194,114 @@ document.addEventListener('DOMContentLoaded', () => {
   // Section 3 — Timer module
   // ================================================================
 
-  const timerModule = {};
+  const timerModule = {
+    /**
+     * Internal countdown state.
+     * Scoped inside the object so all methods share the same instance.
+     */
+    _state: {
+      totalSeconds: 1500,   // 25 * 60 — current countdown value
+      intervalId:   null,   // setInterval handle; null when paused/stopped
+      running:      false,
+    },
+
+    /**
+     * Write current MM:SS to #timer-minutes / #timer-seconds and
+     * update button disabled states to match the running invariant.
+     *
+     * running === true  → Start disabled, Stop enabled,  Reset enabled
+     * running === false → Start enabled,  Stop disabled, Reset enabled
+     */
+    render() {
+      const { totalSeconds, running } = this._state;
+
+      const minutes = Math.floor(totalSeconds / 60);
+      const seconds = totalSeconds % 60;
+
+      const minEl = document.getElementById('timer-minutes');
+      const secEl = document.getElementById('timer-seconds');
+      if (minEl) minEl.textContent = zeroPad(minutes);
+      if (secEl) secEl.textContent = zeroPad(seconds);
+
+      const btnStart = document.getElementById('btn-timer-start');
+      const btnStop  = document.getElementById('btn-timer-stop');
+      const btnReset = document.getElementById('btn-timer-reset');
+
+      if (btnStart) btnStart.disabled = running;
+      if (btnStop)  btnStop.disabled  = !running;
+      if (btnReset) btnReset.disabled = false;
+    },
+
+    /**
+     * Reset state to defaults, call render() to show 25:00, and bind
+     * the three button click listeners.
+     */
+    init() {
+      this._state.totalSeconds = 1500;
+      this._state.intervalId   = null;
+      this._state.running      = false;
+      this.render();
+
+      const btnStart = document.getElementById('btn-timer-start');
+      const btnStop  = document.getElementById('btn-timer-stop');
+      const btnReset = document.getElementById('btn-timer-reset');
+
+      if (btnStart) btnStart.addEventListener('click', () => this.start());
+      if (btnStop)  btnStop.addEventListener('click',  () => this.stop());
+      if (btnReset) btnReset.addEventListener('click', () => this.reset());
+    },
+
+    /**
+     * Begin/resume the countdown.
+     * Guards against multiple concurrent intervals.
+     */
+    start() {
+      if (this._state.running) return;  // already running — do nothing
+
+      this._state.running    = true;
+      this._state.intervalId = setInterval(() => this.tick(), 1000);
+      this.render();
+    },
+
+    /**
+     * Pause the countdown at the current value.
+     */
+    stop() {
+      if (!this._state.running) return;  // already stopped — do nothing
+
+      clearInterval(this._state.intervalId);
+      this._state.intervalId = null;
+      this._state.running    = false;
+      this.render();
+    },
+
+    /**
+     * Stop any active countdown and restore the display to 25:00.
+     */
+    reset() {
+      this.stop();  // clears interval and sets running = false
+      this._state.totalSeconds = 1500;
+      this.render();
+    },
+
+    /**
+     * Decrement totalSeconds by 1 and update the display.
+     * When the countdown reaches 0, stop the interval, update button
+     * states, and alert the user. The display remains at 00:00.
+     */
+    tick() {
+      this._state.totalSeconds -= 1;
+      this.render();
+
+      if (this._state.totalSeconds <= 0) {
+        clearInterval(this._state.intervalId);
+        this._state.intervalId = null;
+        this._state.running    = false;
+        this.render();  // update button states: Start enabled, Stop disabled
+        window.alert('Focus session complete!');
+      }
+    },
+  };
 
   // ================================================================
   // Section 4 — Task module
@@ -341,6 +448,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function init() {
     // Each module's init() will be wired up here as modules are implemented.
     clockModule.init();
+    timerModule.init();
     nameModule.init();
   }
 

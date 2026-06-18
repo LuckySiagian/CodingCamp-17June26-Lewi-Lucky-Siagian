@@ -126,7 +126,7 @@ Implementation language: **Vanilla JavaScript** (ES2020, no build step).
 - [ ] 6. Checkpoint — theme and name modal
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 7. Implement Focus Timer module
+- [x] 7. Implement Focus Timer module
   - Implement `timerModule.{init, start, stop, reset, tick, render}` in **Section 3**.
   - In-memory state: `timerState = { totalSeconds: 1500, intervalId: null, running: false }`.
   - `render()` writes formatted MM:SS to `#timer-minutes`/`#timer-seconds` spans and
@@ -136,10 +136,10 @@ Implementation language: **Vanilla JavaScript** (ES2020, no build step).
     enabled, Stop disabled); the display stays at `00:00`.
   - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7, 4.8_
 
-  - [ ] 7.1 Implement `timerModule.render` and initial state setup
+  - [x] 7.1 Implement `timerModule.render` and initial state setup
     - _Requirements: 4.1, 4.3, 4.5_
 
-  - [ ] 7.2 Implement `timerModule.start`, `timerModule.stop`, `timerModule.reset`
+  - [x] 7.2 Implement `timerModule.start`, `timerModule.stop`, `timerModule.reset`
     - `start()` and `stop()` flip `running` flag and update the interval handle;
       `reset()` clears the interval and restores to 1 500 s.
     - _Requirements: 4.2, 4.4, 4.6_
@@ -148,7 +148,7 @@ Implementation language: **Vanilla JavaScript** (ES2020, no build step).
     - **Property 6: Timer button states are always consistent with running state**
     - **Validates: Requirements 4.3, 4.4, 4.5, 4.6**
 
-  - [ ] 7.4 Implement `timerModule.tick` with 00:00 detection and alert
+  - [x] 7.4 Implement `timerModule.tick` with 00:00 detection and alert
     - _Requirements: 4.7, 4.8_
 
 - [ ] 8. Checkpoint — focus timer
