@@ -154,7 +154,7 @@ Implementation language: **Vanilla JavaScript** (ES2020, no build step).
 - [ ] 8. Checkpoint — focus timer
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 9. Implement Task Manager module
+- [-] 9. Implement Task Manager module
   - Implement `taskModule.{init, addTask, deleteTask, toggleTask, beginEdit, saveEdit, cancelEdit, renderList, persistTasks, loadTasks}` in **Section 4**.
   - In-memory state: `let tasks = []`.
   - Each Task: `{ id: Date.now(), text: String, done: Boolean }`.
@@ -164,7 +164,7 @@ Implementation language: **Vanilla JavaScript** (ES2020, no build step).
   - `loadTasks()` calls `loadItems('tasks')`.
   - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7, 5.8, 5.9_
 
-  - [ ] 9.1 Implement `taskModule.loadTasks`, `taskModule.persistTasks`, and `taskModule.renderList`
+  - [x] 9.1 Implement `taskModule.loadTasks`, `taskModule.persistTasks`, and `taskModule.renderList`
     - Wire `#todo-empty-msg` visibility to `tasks.length === 0`.
     - _Requirements: 5.2, 5.9, 7.2, 7.3_
 
@@ -172,7 +172,7 @@ Implementation language: **Vanilla JavaScript** (ES2020, no build step).
     - **Property 8: Each rendered task item always contains all required elements**
     - **Validates: Requirements 5.2**
 
-  - [ ] 9.3 Implement `taskModule.addTask` (without duplicate check)
+  - [x] 9.3 Implement `taskModule.addTask` (without duplicate check)
     - Generate unique ID via `Date.now()`, push to `tasks`, call `persistTasks` and
       `renderList`, clear the input.
     - _Requirements: 5.1_

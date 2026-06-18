@@ -307,7 +307,185 @@ document.addEventListener('DOMContentLoaded', () => {
   // Section 4 — Task module
   // ================================================================
 
-  const taskModule = {};
+  // Closure variable — shared by all taskModule methods
+  let tasks = [];
+
+  const taskModule = {
+    /**
+     * Load tasks from localStorage using the Section 1 helper.
+     * Assigns the result to the closure `tasks` variable and returns it.
+     *
+     * @returns {Array} The loaded task array (may be empty).
+     */
+    loadTasks() {
+      tasks = loadItems('tasks');
+      return tasks;
+    },
+
+    /**
+     * Persist the current in-memory `tasks` array to localStorage
+     * using the Section 1 helper.
+     */
+    persistTasks() {
+      saveItems('tasks', tasks);
+    },
+
+    /**
+     * Re-build #todo-list entirely from the in-memory `tasks` array.
+     *
+     * - Clears #todo-list (innerHTML = '').
+     * - Appends one <li class="task-item"> per task using the canonical template.
+     * - Adds class "done" and checks the checkbox when task.done === true.
+     * - Shows/hides #todo-list and #todo-empty-msg based on tasks.length.
+     *
+     * Requirements: 5.2, 5.9, 7.2, 7.3
+     */
+    renderList() {
+      const list     = document.getElementById('todo-list');
+      const emptyMsg = document.getElementById('todo-empty-msg');
+
+      if (!list) return;
+
+      // Clear existing items
+      list.innerHTML = '';
+
+      // Build one <li> per task
+      tasks.forEach(task => {
+        const li = document.createElement('li');
+        li.className = 'task-item';
+        li.dataset.id = task.id;
+
+        // Completion state
+        if (task.done) {
+          li.classList.add('done');
+        }
+
+        // Checkbox
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.className = 'task-checkbox';
+        checkbox.setAttribute('aria-label', 'Mark done');
+        if (task.done) {
+          checkbox.checked = true;
+        }
+
+        // Text span
+        const span = document.createElement('span');
+        span.className = 'task-text';
+        span.textContent = task.text;
+
+        // Action buttons container
+        const actions = document.createElement('div');
+        actions.className = 'task-actions';
+
+        const editBtn = document.createElement('button');
+        editBtn.className = 'btn btn-icon btn-secondary';
+        editBtn.dataset.action = 'edit';
+        editBtn.textContent = '✏️';
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'btn btn-icon btn-danger';
+        deleteBtn.dataset.action = 'delete';
+        deleteBtn.textContent = '🗑️';
+
+        actions.appendChild(editBtn);
+        actions.appendChild(deleteBtn);
+
+        li.appendChild(checkbox);
+        li.appendChild(span);
+        li.appendChild(actions);
+
+        list.appendChild(li);
+      });
+
+      // Toggle list visibility vs. empty-state message
+      if (tasks.length === 0) {
+        list.setAttribute('hidden', '');
+        if (emptyMsg) emptyMsg.removeAttribute('hidden');
+      } else {
+        list.removeAttribute('hidden');
+        if (emptyMsg) emptyMsg.setAttribute('hidden', '');
+      }
+    },
+
+    /**
+     * Add a new task to the list after trimming and validating the input text.
+     *
+     * - Empty / whitespace-only text: show #task-error-msg, return early.
+     * - Valid text: hide error, push { id, text, done:false }, persist, render,
+     *   and clear the input.
+     *
+     * Requirements: 5.1
+     *
+     * @param {string} text - The raw input value from #input-task.
+     */
+    addTask(text) {
+      const trimmedText = (text || '').trim();
+      const errorEl     = document.getElementById('task-error-msg');
+      const inputEl     = document.getElementById('input-task');
+
+      if (!trimmedText) {
+        // Show inline validation error; do NOT clear the input
+        if (errorEl) {
+          errorEl.textContent = 'Please enter a task.';
+          errorEl.removeAttribute('hidden');
+        }
+        return;
+      }
+
+      // Valid input — hide any previous error
+      if (errorEl) {
+        errorEl.textContent = '';
+        errorEl.setAttribute('hidden', '');
+      }
+
+      // Create and append the new task
+      const newTask = { id: Date.now(), text: trimmedText, done: false };
+      tasks.push(newTask);
+
+      this.persistTasks();
+      this.renderList();
+
+      // Clear the input field
+      if (inputEl) inputEl.value = '';
+    },
+
+    /**
+     * Initialize the Task module:
+     * 1. Inject #task-error-msg element into #form-add-task (guards against duplicates).
+     * 2. Load persisted tasks and render the initial list.
+     * 3. Bind the #form-add-task submit event to addTask().
+     *
+     * Requirements: 7.2
+     */
+    init() {
+      // --- Inject inline error element ---
+      const form    = document.getElementById('form-add-task');
+      const inputEl = document.getElementById('input-task');
+
+      if (form && inputEl && !document.getElementById('task-error-msg')) {
+        const errorEl = document.createElement('p');
+        errorEl.className = 'error-msg';
+        errorEl.id = 'task-error-msg';
+        errorEl.setAttribute('hidden', '');
+        // Insert after #input-task (before the submit button)
+        inputEl.insertAdjacentElement('afterend', errorEl);
+      }
+
+      // --- Load persisted tasks and render ---
+      tasks = this.loadTasks();
+      this.renderList();
+
+      // --- Bind add-task form ---
+      if (form) {
+        form.addEventListener('submit', (e) => {
+          e.preventDefault();
+          const inputValue = inputEl ? inputEl.value : '';
+          this.addTask(inputValue);
+        });
+      }
+    },
+  };
 
   // ================================================================
   // Section 5 — Link module
@@ -450,6 +628,7 @@ document.addEventListener('DOMContentLoaded', () => {
     clockModule.init();
     timerModule.init();
     nameModule.init();
+    taskModule.init();
   }
 
   init();
