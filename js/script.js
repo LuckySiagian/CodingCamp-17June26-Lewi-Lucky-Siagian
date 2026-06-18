@@ -312,6 +312,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const taskModule = {
     /**
+     * Check whether a normalized text already exists in the task list.
+     * Comparison is case-insensitive and whitespace-trimmed.
+     * Pass `excludeId` when editing so the task's own text is not considered
+     * a duplicate of itself.
+     *
+     * @param {string}      text      - Candidate text (will be trimmed + lowercased).
+     * @param {string|null} excludeId - Task id to exclude from comparison (optional).
+     * @returns {boolean} true if a matching task exists, false otherwise.
+     * Requirements: 6.1
+     */
+    isDuplicate(text, excludeId = null) {
+      const normalized = text.trim().toLowerCase();
+      return tasks.some(t =>
+        t.id !== Number(excludeId) &&
+        t.text.trim().toLowerCase() === normalized
+      );
+    },
+
+    /**
      * Load tasks from localStorage using the Section 1 helper.
      * Assigns the result to the closure `tasks` variable and returns it.
      *
@@ -439,6 +458,16 @@ document.addEventListener('DOMContentLoaded', () => {
         errorEl.setAttribute('hidden', '');
       }
 
+      // Duplicate check — Requirements: 6.1, 6.2, 6.3
+      const duplicateMsg = document.getElementById('todo-duplicate-msg');
+      if (this.isDuplicate(trimmedText)) {
+        if (duplicateMsg) duplicateMsg.removeAttribute('hidden');
+        // Do NOT clear the input — keep the user's value
+        return;
+      }
+      // Hide duplicate warning if previously shown
+      if (duplicateMsg) duplicateMsg.setAttribute('hidden', '');
+
       // Create and append the new task
       const newTask = { id: Date.now(), text: trimmedText, done: false };
       tasks.push(newTask);
@@ -555,6 +584,31 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
+      // Check for duplicate — exclude the current task's own id
+      // Requirements: 6.1 (also covers inline edit path)
+      if (this.isDuplicate(trimmed, id)) {
+        // Show warning inline inside the task's <li>, NOT in #todo-duplicate-msg
+        const list = document.getElementById('todo-list');
+        const li = list ? list.querySelector(`li[data-id="${id}"]`) : null;
+        if (li) {
+          let editError = li.querySelector('.edit-duplicate-msg');
+          if (!editError) {
+            editError = document.createElement('p');
+            editError.className = 'error-msg edit-duplicate-msg';
+            const editInput = li.querySelector('.task-edit-input');
+            if (editInput) editInput.insertAdjacentElement('afterend', editError);
+          }
+          editError.textContent = '⚠️ This task already exists.';
+          editError.removeAttribute('hidden');
+        }
+        // Keep the edit input active — do NOT save, do NOT re-render
+        return;
+      }
+
+      // Clear the global duplicate message before saving
+      const duplicateMsg = document.getElementById('todo-duplicate-msg');
+      if (duplicateMsg) duplicateMsg.setAttribute('hidden', '');
+
       const task = tasks.find(t => t.id === Number(id));
       if (!task) return;
 
@@ -607,6 +661,15 @@ document.addEventListener('DOMContentLoaded', () => {
           e.preventDefault();
           const inputValue = inputEl ? inputEl.value : '';
           this.addTask(inputValue);
+        });
+      }
+
+      // Hide duplicate warning as soon as the user starts typing again
+      // Requirements: 6.4
+      if (inputEl) {
+        inputEl.addEventListener('input', () => {
+          const duplicateMsg = document.getElementById('todo-duplicate-msg');
+          if (duplicateMsg) duplicateMsg.setAttribute('hidden', '');
         });
       }
 

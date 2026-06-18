@@ -212,7 +212,7 @@ Implementation language: **Vanilla JavaScript** (ES2020, no build step).
     - **Property 13: Task persistence round-trip preserves data and insertion order**
     - **Validates: Requirements 7.1, 7.2**
 
-- [ ] 10. Implement Duplicate Task Prevention
+- [x] 10. Implement Duplicate Task Prevention
   - Extend `taskModule.addTask` to run the duplicate check **before** inserting.
   - Duplicate check: `text.trim().toLowerCase()` vs every existing task's
     `task.text.trim().toLowerCase()`, regardless of `done` status.
@@ -220,14 +220,14 @@ Implementation language: **Vanilla JavaScript** (ES2020, no build step).
   - On any subsequent change to `#input-task`, hide `#todo-duplicate-msg` again.
   - _Requirements: 6.1, 6.2, 6.3, 6.4_
 
-  - [ ] 10.1 Add duplicate detection logic inside `taskModule.addTask`
+  - [x] 10.1 Add duplicate detection logic inside `taskModule.addTask`
     - _Requirements: 6.1, 6.2, 6.3_
 
   - [ ]* 10.2 Write property test for duplicate detection (Property 12)
     - **Property 12: Duplicate detection is case- and whitespace-insensitive**
     - **Validates: Requirements 6.1, 6.2, 6.3**
 
-  - [ ] 10.3 Bind `#input-task` `input` event to hide duplicate warning
+  - [x] 10.3 Bind `#input-task` `input` event to hide duplicate warning
     - _Requirements: 6.4_
 
 - [ ] 11. Checkpoint — task manager and duplicate prevention
