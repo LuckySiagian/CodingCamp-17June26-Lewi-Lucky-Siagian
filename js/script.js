@@ -988,7 +988,66 @@ document.addEventListener('DOMContentLoaded', () => {
   // Section 6 — Theme module
   // ================================================================
 
-  const themeModule = {};
+  const themeModule = {
+    /**
+     * Apply a theme by setting the data-theme attribute on <html> and
+     * updating the toggle button label to reflect the opposite action.
+     *
+     * - data-theme="dark"  → button text "☀️ Light Mode"
+     * - data-theme="light" → button text "🌙 Dark Mode"
+     *
+     * @param {string} t - The theme to apply: "light" or "dark".
+     * Requirements: 10.1, 10.2, 10.3
+     */
+    applyTheme(t) {
+      // Set the data-theme attribute on the root <html> element so that
+      // all CSS custom properties cascade from a single point of truth.
+      document.documentElement.setAttribute('data-theme', t);
+
+      // Update button label to reflect the action (switch to the opposite)
+      const btn = document.getElementById('btn-theme-toggle');
+      if (btn) {
+        btn.textContent = t === 'dark' ? '☀️ Light Mode' : '🌙 Dark Mode';
+      }
+    },
+
+    /**
+     * Toggle the current theme between "light" and "dark".
+     * Reads the current data-theme from <html>, flips to the opposite,
+     * persists it to localStorage, then applies the new theme.
+     *
+     * Requirements: 10.1, 10.4
+     */
+    toggle() {
+      const current  = document.documentElement.getAttribute('data-theme');
+      const newTheme = current === 'dark' ? 'light' : 'dark';
+      saveString('theme', newTheme);
+      this.applyTheme(newTheme);
+    },
+
+    /**
+     * Initialize the Theme module:
+     * 1. Read the saved theme from localStorage.
+     * 2. Validate the stored value — accept only "light" or "dark";
+     *    any other value (including null, empty string, or unrecognized)
+     *    defaults to "light".
+     * 3. Apply the resolved theme immediately to prevent a flash of the
+     *    wrong theme on load.
+     * 4. Bind the #btn-theme-toggle click event to toggle().
+     *
+     * Requirements: 10.5, 10.6
+     */
+    init() {
+      const stored = localStorage.getItem('theme');
+      const theme  = (stored === 'light' || stored === 'dark') ? stored : 'light';
+      this.applyTheme(theme);
+
+      const btn = document.getElementById('btn-theme-toggle');
+      if (btn) {
+        btn.addEventListener('click', () => this.toggle());
+      }
+    },
+  };
 
   // ================================================================
   // Section 7 — Name modal module
@@ -1115,7 +1174,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // ================================================================
 
   function init() {
-    // Each module's init() will be wired up here as modules are implemented.
+    themeModule.init();   // FIRST: apply theme before any rendering to prevent flash
     clockModule.init();
     timerModule.init();
     nameModule.init();

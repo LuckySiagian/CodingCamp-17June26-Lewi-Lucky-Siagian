@@ -70,7 +70,7 @@ Implementation language: **Vanilla JavaScript** (ES2020, no build step).
 - [ ] 3. Checkpoint — clock and greeting
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 4. Implement Theme module
+- [x] 4. Implement Theme module
   - Implement `themeModule.{init, applyTheme, toggle}` in **Section 6** of
     `script.js`.
   - `applyTheme(t)` sets `document.documentElement.setAttribute('data-theme', t)`
@@ -80,10 +80,10 @@ Implementation language: **Vanilla JavaScript** (ES2020, no build step).
   - `toggle()` flips the active theme and calls `saveString('theme', newTheme)`.
   - _Requirements: 10.1, 10.2, 10.3, 10.4, 10.5, 10.6_
 
-  - [ ] 4.1 Implement `themeModule.applyTheme` and `themeModule.toggle`
+  - [x] 4.1 Implement `themeModule.applyTheme` and `themeModule.toggle`
     - _Requirements: 10.1, 10.2, 10.3, 10.4_
 
-  - [ ] 4.2 Implement `themeModule.init` with localStorage load and fallback
+  - [x] 4.2 Implement `themeModule.init` with localStorage load and fallback
     - _Requirements: 10.5, 10.6_
 
   - [ ]* 4.3 Write property test for theme toggle round-trip (Property 18)
