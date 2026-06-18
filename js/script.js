@@ -16,6 +16,29 @@
 document.addEventListener('DOMContentLoaded', () => {
 
   // ================================================================
+  // Toast Helper
+  // ================================================================
+  function showToast(message, type = 'info') {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    
+    let icon = 'ℹ️';
+    if (type === 'success') icon = '✅';
+    else if (type === 'warning') icon = '⚠️';
+    else if (type === 'error') icon = '❌';
+
+    toast.innerHTML = `<span>${icon}</span><span>${message}</span>`;
+    container.appendChild(toast);
+
+    setTimeout(() => {
+      toast.remove();
+    }, 3000);
+  }
+
+  // ================================================================
   // Section 1 — Storage helpers
   // ================================================================
 
@@ -524,6 +547,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const duplicateMsg = document.getElementById('todo-duplicate-msg');
       if (this.isDuplicate(trimmedText)) {
         if (duplicateMsg) duplicateMsg.removeAttribute('hidden');
+        showToast('This task already exists.', 'warning');
         // Do NOT clear the input — keep the user's value
         return;
       }
@@ -536,6 +560,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       this.persistTasks();
       this.renderList();
+      showToast(`Task added: "${trimmedText}"`, 'success');
 
       // Clear the input field
       if (inputEl) inputEl.value = '';
@@ -553,6 +578,11 @@ document.addEventListener('DOMContentLoaded', () => {
       task.done = !task.done;
       this.persistTasks();
       this.renderList();
+      if (task.done) {
+        showToast(`Task completed: "${task.text}"`, 'success');
+      } else {
+        showToast(`Task active: "${task.text}"`, 'info');
+      }
     },
 
     /**
@@ -562,9 +592,12 @@ document.addEventListener('DOMContentLoaded', () => {
      * Requirements: 5.8
      */
     deleteTask(id) {
+      const task = tasks.find(t => t.id === Number(id));
+      const text = task ? task.text : 'Task';
       tasks = tasks.filter(t => t.id !== Number(id));
       this.persistTasks();
       this.renderList();
+      showToast(`Deleted task: "${text}"`, 'error');
     },
 
     /**
@@ -615,6 +648,7 @@ document.addEventListener('DOMContentLoaded', () => {
           editError.textContent = '⚠️ This task already exists.';
           editError.removeAttribute('hidden');
         }
+        showToast('This task already exists.', 'warning');
         // Keep the edit input active — do NOT save, do NOT re-render
         return;
       }
@@ -630,6 +664,7 @@ document.addEventListener('DOMContentLoaded', () => {
       editingTaskId = null;
       this.persistTasks();
       this.renderList();
+      showToast('Task updated!', 'success');
     },
 
     /**
@@ -998,6 +1033,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       this.persistLinks();
       this.renderList();
+      showToast(`Link added: "${trimmedLabel}"`, 'success');
 
       // Clear inputs
       if (labelInput) labelInput.value = '';
@@ -1011,9 +1047,12 @@ document.addEventListener('DOMContentLoaded', () => {
      * Requirements: 8.4
      */
     deleteLink(id) {
+      const link = links.find(l => l.id === Number(id));
+      const label = link ? link.label : 'Link';
       links = links.filter(l => l.id !== Number(id));
       this.persistLinks();
       this.renderList();
+      showToast(`Deleted link: "${label}"`, 'error');
     },
 
     /**
@@ -1198,6 +1237,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const newTheme = current === 'dark' ? 'light' : 'dark';
       saveString('theme', newTheme);
       this.applyTheme(newTheme);
+      showToast(`Switched to ${newTheme === 'dark' ? 'Dark' : 'Light'} Mode`, 'info');
     },
 
     /**
@@ -1341,6 +1381,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Close the modal (also clears the error message)
       this.closeModal();
+      showToast(`Name saved: "${finalName}"`, 'success');
     },
   };
 
